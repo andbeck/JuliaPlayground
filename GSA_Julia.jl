@@ -1,4 +1,7 @@
-using Plots, DiffEqSensitivity
+using Plots, DiffEqSensitivity, DifferentialEquations, ParameterizedFunctions
+
+# plot set
+gr()
 
 # model
 function f(du,u,p,t)
@@ -13,7 +16,11 @@ t = collect(range(0, stop=10, length=200))
 
 # Morris
 
-m = DiffEqSensitivity.morris_sensitivity(prob,Tsit5(),t,[[1,5],[0.5,5]],[10,10],len_trajectory=1500,total_num_trajectory=1000,num_trajectory=150)
+m = DiffEqSensitivity.morris_sensitivity(prob,Tsit5(),t,[[1,5],[0.5,5]],[10,10],
+len_trajectory=1500,
+total_num_trajectory=1000,
+num_trajectory=150)
+
 m.means
 m.variances
 

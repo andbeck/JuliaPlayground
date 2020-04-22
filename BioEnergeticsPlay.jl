@@ -1,23 +1,29 @@
 ## Working with BioEnergeticFoodWebs
 
-using Plots, BioEnergeticFoodWebs, Random
+using Plots, BioEnergeticFoodWebs, Random, DataFrames
 
 # gr
 gr()
 
 # basic simulation with BEFW from MEE paper
 # generate random food web
-Random.seed!(123)
-A = nichemodel(20,0.15, toltype = :abs)
-a = range(0.92, stop = 1.08, length = 3)
+
+Random.seed!(42) # replaces srand()
+
+A = nichemodel(20,0.15, tolerance = 0.01)
+a = range(0.9, stop = 1.1, length = 3)
 K = exp10.(range(-1,1,length = 9))
 
 diversity = zeros((9,3))
+stability = zeros((9,3))
+tot_biomass = zeros((9,3))
 
 for j in 1:length(a)  # change from MEE with J 1.0
     for i in 1:length(K)  # changed from MEE paper with J 1.0 + typo in paper
 
         global(diversity)
+        global(stability)
+        global(total_biomass)
 
         p = model_parameters(A, α = a[j], K = K[i], productivity = :competitive)
 
@@ -30,12 +36,18 @@ for j in 1:length(a)  # change from MEE with J 1.0
 
         # And measure the output
         diversity[i,j] = foodweb_evenness(out, last = 1000) # omit eps() from MEE
+        stability[i,j] = population_stability(out, last = 1000)
+        tot_biomass[i,j] = total_biomass(out, last = 1000)
     end
 end
 
+
 diversity
-plot(K, diversity[1:9,1])
-plot!(K, diversity[1:9,2])
-plot!(K, diversity[1:9,3])
+stability
+tot_biomass
+
+plot(K, diversity)
+plot(K, stability)
+plot(K, tot_biomass)
 
 # plot(K, diversity)

@@ -46,8 +46,12 @@ diversity
 stability
 tot_biomass
 
-plot(K, diversity)
-plot(K, stability)
-plot(K, tot_biomass)
+# facets
+plot(K, diversity, layout = (3,1))
 
-# plot(K, diversity)
+# layout grid.arrange
+p1 = plot(K, diversity, ylabel = "Evenness")
+p2 = plot(K, stability, ylabel = "Stability")
+p3 = plot(K, tot_biomass, ylabel = "Biomass",xlabel = "K")
+
+plot(p1, p2, p3, layout = (3, 1), legend = true)

@@ -11,12 +11,12 @@ gr()
 Random.seed!(42) # replaces srand()
 
 A = nichemodel(20,0.15, tolerance = 0.01)
-a = range(0.9, stop = 1.1, length = 3)
+a = range(0.5, 1, length = 9)
 K = exp10.(range(-1,1,length = 9))
 
-diversity = zeros((9,3))
-stability = zeros((9,3))
-tot_biomass = zeros((9,3))
+diversity = zeros((9,9))
+stability = zeros((9,9))
+tot_biomass = zeros((9,9))
 
 for j in 1:length(a)  # change from MEE with J 1.0
     for i in 1:length(K)  # changed from MEE paper with J 1.0 + typo in paper
@@ -55,3 +55,7 @@ p2 = plot(K, stability, ylabel = "Stability")
 p3 = plot(K, tot_biomass, ylabel = "Biomass",xlabel = "K")
 
 plot(p1, p2, p3, layout = (3, 1), legend = true)
+
+heatmap(K, a, diversity)
+heatmap(K, a, stability)
+heatmap(K, a, tot_biomass)

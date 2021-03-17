@@ -10,22 +10,21 @@ q = [0.0, 0.1, 0.25, 1.0]
 # note .+ for adding scalar to vector
 h = q .+ 1
 
-α=[0.92, 1.0, 1.08]
+#α=[0.92, 1.0, 1.08]
 k = exp10.(range(-1,1,length = 10))
 
 ## replicates (networks)
-reps = 1
+reps = 5
 
-## Data Frame set up to collect
-df = DataFrame(α = [], K = [], network = [], diversity = [], stability = [], biomass = [])
+## Data Frame set up to collect df = DataFrame(α = [], K = [], network = [], diversity = [], stability = [], biomass = [])
 df2 = DataFrame(h = [], K = [], network = [], diversity = [], stability = [], biomass = [])
 
 # Make N Networks
-
+Random.seed!(21)
 global networks = []
 global l = length(networks)
 
-## creatnes reps networks 
+## creates reps networks 
 while l < reps
     A_bool = EcologicalNetworks.nichemodel(20,0.15)
     A = adjacency(A_bool)
@@ -74,11 +73,11 @@ df2 # h
 
 
 ## are there any NaN - yes.
-bb=df[!,"biomass"]
+bb=df2[!,"biomass"]
 dd=df[!, "diversity"]
 ss=df[!,"stability"]
 
-filter(isnan,bb2)
+filter(isnan,bb)
 filter(isnan,dd2)
 filter(isnan,ss2)
 
@@ -156,3 +155,43 @@ A = Int.(adjacency(EcologicalNetworks.nichemodel(20,0.15)))
 p = model_parameters(A, h= 2.0, K = [1.0])
 bm = rand(size(A,1))
 out = simulate(p, bm, start = 0, stop = 2000)
+
+
+
+pl = Plots.plot([NaN], [NaN],
+                label = "",
+                ylims = (0,1.1),
+                leg = :bottomright,
+                foreground_colour_legend = nothing,
+                xticks = (log10.(k), string.(round.(k, digits = 1))),
+                xlabel = "Carrying Capacity",
+                ylabel = "")
+#Set marker shapes.
+shp = [:square, :diamond, :utriangle]
+#Set line types.
+ls = [:solid, :dash, :dot]
+#Set colours.
+clr = [RGB(174/255, 139/255, 194/255), RGB(188/255, 188/255, 188/255), RGB(124/255, 189/255, 122/255)]
+#When we define colours in JUlia they are printed.
+#Set legend labels.
+lbl = ["1.0", "1.1", "1.25", "2.0"]
+
+pl
+#Make the plot.
+for (i, h) in enumerate(h)
+    #Subset.
+    tmp = df2[df2.h .== h, :]
+    #Remove NaN values.
+    tmp = tmp[.!(isnan.(tmp.diversity)), :]
+    #Calculate mean across reps.
+    meandf = combine(groupby(tmp, :K), :diversity => mean)
+    #Command to avoid printing legends multiple times.
+    l = i == 1 ? lbl[i] : ""
+    #Add to pl.
+    plot!(pl, log10.(meandf.K), meandf.diversity_mean,
+    mc = :white,
+    msw = 3,
+    lw = 2,
+    label = lbl[i],
+    seriestype = [:line :scatter])
+end

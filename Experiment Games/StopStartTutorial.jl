@@ -44,7 +44,10 @@ We run a burn-in phase to remove some structurally doomed species
 # note too that we've set bodymass as random....
 =#
 
-b0 = rand(S) #initial biomass
+#initial biomass distribution.
+b0 = rand(S) 
+
+# intitial 'burn-in' simulation
 s = simulate(p, b0, stop = 2000)
 
 #=
@@ -63,10 +66,13 @@ non_extinct = trues(S) # create vector of TRUE for all species.
 
 # Now set extinct species to false - don't forget the broadcast operator "." 
 # because we are modifying multiple entries
+
 non_extinct[extinct] .= false 
 
 # Now - subset to keep only non extinct species
-A = A[non_extinct, non_extinct]  
+# there were 70 extinctions.... down to a 30 x 30 array
+A = A[non_extinct, non_extinct]
+
 # Now subset body mass information to keep only non extinct species
 bodymass_vector = p[:bodymass][non_extinct]  
 
@@ -76,8 +82,19 @@ bodymass_vector = p[:bodymass][non_extinct]
 # (equilibrium dynamics)
 b1 = population_biomass(s, last = 500)[non_extinct] 
 
+#= 
+ --- REVIEW ----
+At this stage, all you've done is what we call the burn-in.  
+We've initialised a network, run it for 2000 timesteps
+Collected the network at the end of it
+Reduced the bodymass distribution to the same species
+Estimated the biomass of each of these species.
+
+These last three are the STARTING point for the experiments
+=#
+
 #=
-Step 5: Primary extinction or perturbation
+Step 5: Primary extinction or perturbation experiment
 =#
 
 # set a rule for targetting a species for extinction OR harvesting
@@ -139,4 +156,4 @@ Step 4,5...: Do an order of extinctions again and again?
 Step 4,5...: Apply harvesting to more than 1 species?   
 If you want to continue to remove or perturb species, you can repeat steps 4 and 5
 (e.g. make loops!)
-#=
+=#

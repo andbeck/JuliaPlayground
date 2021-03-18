@@ -12,8 +12,9 @@ This Gist show how to
 
 # set up the toolbox
 using BioEnergeticFoodWebs
-using Distributions
+using Distributions, Plots
 import Random.seed!
+Pkg.status()
 
 # setting a seed makes it possible to replicate exactly the same results, 
 # even when there is randomness involved
@@ -50,6 +51,11 @@ b0 = rand(S)
 # intitial 'burn-in' simulation
 s = simulate(p, b0, stop = 2000)
 
+# making sure we see what has happened
+# why has this gone to 8000? Because the computer is collecting
+# every 0.25 time steps...
+Plots.plot(s[:B], legend = false)
+
 #=
 Step 4: 
 1. identify extinct species
@@ -61,25 +67,37 @@ and the distribution of bodymasses
 3. Record equilibrium dynamics from the initial 2000 steps
 =#
 
-extinct = p[:extinctions] #id of extinct species 
-non_extinct = trues(S) # create vector of TRUE for all species.
+#id of extinct species (there are 70!)
+extinct = p[:extinctions] 
 
-# Now set extinct species to false - don't forget the broadcast operator "." 
+# create vector of 1 for all species.
+# this is for efficiency - start with all true (1), then
+# make some false
+non_extinct = trues(S) 
+
+# Now set extinct species to false = 0 - 
+# don't forget the broadcast operator "." 
 # because we are modifying multiple entries
 
 non_extinct[extinct] .= false 
 
-# Now - subset to keep only non extinct species
+# make sure it worked
+# this has 1 and 0's and the 4th and 5th are as expected
+non_extinct
+
+# Now - subset the A matrix to keep only non extinct species
 # there were 70 extinctions.... down to a 30 x 30 array
 A = A[non_extinct, non_extinct]
 
-# Now subset body mass information to keep only non extinct species
+# Now subset body mass information 
+# to keep only non extinct species
 bodymass_vector = p[:bodymass][non_extinct]  
 
-# now collect the equilibrium dynamics of these non-extinct:
+# now collect the mean biomass at equilibrium of these non-extinct:
 # These serve as a starting point for next simulation
 # average biomass of remaining species during the last 500 timesteps 
 # (equilibrium dynamics)
+
 b1 = population_biomass(s, last = 500)[non_extinct] 
 
 #= 
@@ -92,6 +110,12 @@ Estimated the biomass of each of these species.
 
 These last three are the STARTING point for the experiments
 =#
+
+# these should all be 30 species data for this seed and nichemodel
+S  - length(extinct)
+A
+length(bodymass_vector)
+length(b1)
 
 #=
 Step 5: Primary extinction or perturbation experiment
@@ -130,10 +154,13 @@ Step 5.b -> IF PERTURBATION
 # set a rule for the % loss of a species
 # here for example, the biomass of the target species will be reduced to 
 # 80% of its original equilibrium value
-b_loss = 0.8 
+b_retain = 0.8 
 
 # apply loss of biomass to the target species
-b1[id_primext] = b1[id_primext] * b_loss 
+
+b1[id_primext]
+
+b1[id_primext]= b1[id_primext] * b_retain 
 
 #recalculate parameters with the new food web 
 p = model_parameters(A, h = 2.0, K = [10.0]) 

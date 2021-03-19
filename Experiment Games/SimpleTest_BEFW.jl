@@ -1,4 +1,11 @@
-using BioEnergeticFoodWebs, EcologicalNetworks, Random, Pkg
+ 
+Random.seed!(21)
+A_en = Int.(adjacency(EcologicalNetworks.nichemodel(20,0.15)))
+
+Random.seed!(21)
+A_befw = BioEnergeticFoodWebs.nichemodel(20,0.15)
+
+A_en == A_befw
 
 #Pkg.status()
 

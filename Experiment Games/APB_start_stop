@@ -1,0 +1,33 @@
+using BioEnergeticFoodWebs, EcologicalNetworks, Random, Pkg
+using Plots
+
+gr()
+
+Random.seed!(21)
+S = 20
+A_init = BioEnergeticFoodWebs.nichemodel(S,0.15)
+p_init = model_parameters(A_init, h= 2.0, K = [10.0])
+bm_init = rand(size(A_init,1))
+out_burn = simulate(p_init, bm_init, start = 0, stop = 2000, interval_tkeep = 1)
+
+plot(log10.(out_burn[:B]))
+
+extinct_1 = p_init[:extinctions]
+length(extinct_1)
+non_extinct = trues(S) 
+non_extinct[extinct_1] .= false 
+non_extinct
+
+A_next = A_init[non_extinct, non_extinct]
+S-size(A_next)[1] == length(extinct_1)
+
+biomass_next = p_init[:bodymass][non_extinct]
+bm_next = population_biomass(out_burn, last = 1)[non_extinct] 
+
+p_next = model_parameters(A_next, h = 2.0, K = [10.0])
+p_next[:bodymass] = bm_next
+
+out_forward = simulate(p_next, biomass_next, stop = 2000, interval_tkeep = 1)
+
+plot(log10.(out_forward[:B]))
+

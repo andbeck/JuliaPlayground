@@ -10,6 +10,10 @@ h = [1,2]
 K = [1.0, 10.0]
 T = [273.15-10, 273.15, 273.15+10]
 
+
+p = model_parameters(A, Z = Z[1], h = h[1], K = [K[1]], T = T[2])
+out = simulate(p, bm, start = 0, stop = 2000, interval_tkeep = 1) 
+
 outdf = DataFrame(Z = [], h = [], K = [], T = [],
                     persistence = [], biomass = [], stability = [])
 

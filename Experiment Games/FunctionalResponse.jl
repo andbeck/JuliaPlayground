@@ -24,7 +24,7 @@ Random.seed!(21)
 global networks = []
 global l = length(networks)
 
-## creates reps networks 
+## creates reps networks
 while l < reps
     A_bool = EcologicalNetworks.nichemodel(20,0.15)
     A = adjacency(A_bool)
@@ -45,9 +45,9 @@ for n in 1:reps
     for i in 1:length(h)
     # for i in 1:length(α)
         for j in 1:length(k)
-            
+
             println(n,i,j)
-            
+
             ## choose h or α
             p = model_parameters(A, h = h[i], K = [k[j]])
             # p = model_parameters(A, α = α[i], K = [k[j]])
@@ -106,15 +106,15 @@ df2_diversity = combine(groupby(df2, [:h, :K]), :diversity .=> mean)
 
 
 # make plots of summaries using Gadfly
-p1=Gadfly.plot(df_biomass, xgroup = :α, 
+p1=Gadfly.plot(df_biomass, xgroup = :α,
     x = :K, y = :biomass_mean,
     Geom.subplot_grid(Geom.point))
 
-p2=Gadfly.plot(df_stability, xgroup = :α, 
+p2=Gadfly.plot(df_stability, xgroup = :α,
     x = :K, y = :stability_mean,
     Geom.subplot_grid(Geom.point))
 
-p3=Gadfly.plot(df_diversity, xgroup = :α, 
+p3=Gadfly.plot(df_diversity, xgroup = :α,
     x = :K, y = :diversity_mean,
     Geom.subplot_grid(Geom.point))
 

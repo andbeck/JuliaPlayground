@@ -13,10 +13,10 @@ This script shows how to
 import Pkg
 using BioEnergeticFoodWebs
 using Distributions
-using Plots
+using Plots, StatsPlots
 using DataFrames
 
-# Make sure you are using the right BEFW!
+# Make sure you are using the right BEFW! (dev-1.3.0)
 Pkg.status()
 
 # Set seed
@@ -92,17 +92,16 @@ species_data[p[:extinctions],:extinction_sim] .= Int.(zeros(length((p[:extinctio
 
 species_data[p[:extinctions], :]
 
-
 # here we construct a dataframe for community level metrics by preallocating the type and name of each column
 # note that R_x is the Rvalue as exinctions arise....
-community_data = DataFrame([Int64, Float64, Float64, Float64, Float64],[:sim, :total_biomass, :persistence, :richness, :R_x])
 
+community_data = DataFrame([Int64, Float64, Float64, Float64, Float64],[:sim, :total_biomass, :persistence, :richness, :R_x])
 
 # populate community_data using push!
 # again, we've used 0 for this first simulation (sim column) which is the burn in phase
 # we could also have calculated stability or diversity, or some other out of the box metrics
-# like network height (max TL) or size structure (the realised Z value of the community)
 
+# like network height (max TL) or size structure (the realised Z value of the community)
 push!(community_data, [0, total_biomass(s, last = 500), species_persistence(s, last = 500), species_richness(s, last = 500), species_richness(s, last = 500)/S])
 
 #=
@@ -114,7 +113,6 @@ b1 = s[:B][end,:] # b1 will serve as a starting point for our next simulation
 #=
 Step 5: Using a while loop, lets us loop through primary extinction events
  ---> until 50% (R50) of all species have gone extinct!!!!  Wooohoo!
-
 Here, we will remove species in decending order from the largest to the smallest based on TL
 The catch here is we can only remove species that are persistent in the community and
         have to take this into account when looping.
@@ -127,6 +125,7 @@ Step 5a:
 - we need to estimate species richness at the end of the burnin as our reference point for R50.
 - we calcuate that with the species_richness function applied to the burnin simulations
 =#
+
 global i = species_richness(s, last = 500) #we need the global macro to be able to use that variable in the while loop
 global j = 0.0
 
@@ -137,6 +136,7 @@ As long as species richness i is greater than S/2 (R50%), keep going
 =#
 
 while i >= S/2
+
     println("i = $i and j = $j") # keep track of loop
 
     #=
@@ -144,51 +144,53 @@ while i >= S/2
     =#
 
     # There are many options here: random extinctions, Large-Small, Top to Bottom.....
-
     # set a rule for targetting a species, here the consumer with the highest trophic rank
     # this is quite complicated but we've scattered it onto multiple lines to provide clarity (or sanity checks)
     # Basically, we had to make sure that the first species with maximum TL wasn't already extinct
     # and therefore that the removal of species was having the correct effect in our simulations
-
+    
     is_extinct_0 = falses(S) # make a vector of 0's (falses) the size of S
     is_extinct_0[p[:extinctions]] .= true # set extinction species to 1 (true)
     tl = p[:trophic_rank] # calculate trophic rank of each species
     id_sorted = sortperm(tl, rev = true) # create a vector of species identity sorted by decreasing trophic level
     is_extinct_sorted = is_extinct_0[id_sorted] # reorder the extinct vector by species id
     id_primext = id_sorted[.!is_extinct_sorted][1] # select first species that fit our criterion that isn't already extinct
-
+    
     #=
     Step 5d: Simulate forward (e.g. from where the burnin finished, but now with making an extinction!)
     =#
+    
     b1[id_primext] = 0.0 #set biomass of primary extinct species to 0
     s1 = simulate(p, b1, stop = 2000) #run the simulation
-
+   
     #=
     Step 5e: Update community dataframe
     =#
+
     # update community dataframe - easy using push!
     # this calcuates stuff caused by the extinction above
     push!(community_data, [j, total_biomass(s1, last = 500), species_persistence(s1, last = 500), species_richness(s1, last = 500),
         species_richness(s1, last = 500)/S])
-
-    #=
+    
+        #=
     Step 5f: Update species dataframe
     =#
+
     # identify any newly extinct species
     global is_extinct_1 = falses(S)
     global is_extinct_1[p[:extinctions]] .= true
     new_extinct = findall(is_extinct_1 .!= is_extinct_0)
-
+    
     # for newly extinct species, specify that they went extinct during the jth run by setting
     # :extinction_sim in species_data as j
     # add relevant information to the species_data data frame
     species_data[new_extinct,:extinction_sim] .= fill(j,length(new_extinct))
-
+    
     #=
     Step 5g: Update biomasses again for when the next 1˚ extinction event occurs
     =#
     b1 = s1[:B][end,:]
-
+    
     #=
     Step 5h: Update counters
     =#
@@ -212,21 +214,41 @@ species_data[is_extinct_1,:extinction_time] .= ext_time_ts #pass extinction time
 community_data
 species_data
 
+# one thing we can do is to identify primary extinction, secondary extinction and non extinct species
+# this will help us with the visualisation
+idprimary = findall(species_data.extinction_time .== 0)
+idsecondary = findall(species_data.extinction_time .> 0)
+idnonextinct = findall(isnan.(species_data.extinction_time))
+
+#we can add this information to the data frame: 
+species_data.extinction_type = fill("NaN", S)
+species_data.extinction_type[idprimary] .= "Primary"
+species_data.extinction_type[idsecondary] .= "Secondary"
 # look at the distribution of extinction times
 p1 = histogram(species_data[!,"extinction_time"], legend = false)
 xlabel!("Extinction Times")
+
 # mass versus extinction time
-# can we colour the points as 1˚ vs. 2˚??
+#extinctions_time is NaN for non extinct species, so they won't be plotted, we don't need to worry about them
 p2 = plot(log10.(species_data[!, "M"]), log10.(species_data[!, "extinction_time"]),
-    seriestype = :scatter, legend = false)
+    seriestype = :scatter, legend = false, c = :black, msw = 0)
     xlabel!("log10(Mass)")
     ylabel!("log10(Extinction Time")
+
+#primary extinct VS secondary extinct VS non extinct species in-degree 
+p3 = density(species_data.indegree, group = species_data.extinction_type
+    , label = ["Non-extinct" "Primary extinctions" "Secondary extinctions"]
+    , linestyle = [:dash :dot :solid], lw = 2, xlims = (0,50), leg = :topleft)
+xlabel!("In-degree")
+
 # look at richess declining with events
-p3 = plot(community_data[!,"sim"], community_data[!,"richness"], marker = true, legend = false)
+p4 = plot(community_data[!,"sim"], community_data[!,"richness"], legend = false)
 xlabel!("Primary Extinction Event")
 ylabel!("Richness")
 
+plot(p1, p2, p3, p4, layout=(2,2), size = (700,700))
 
-plot(p1, p2, p3, layout=(1,3))
+#Remember that you can save the data frames as csv files using the CSV package 
+#and save the plots using the savefig function
 
 # THE END #

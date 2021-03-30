@@ -21,7 +21,7 @@ Pkg.status()
 import Random.seed!
 seed!(5436) # setting a seed makes it possible to replicate exactly the same results, even when there is randomness involved
 
-#=
+#
 Step 1: Import some functions that we've made earlier
 These functions allow you to use the temperature scaled version of the BEFW which is resolved in real time
 =#
@@ -134,7 +134,7 @@ harvest_rate = 0.6 # set the rate of harvesting
 Step 7: Loop through simulations of several harvesting events
 =#
 
-sims = 10 # number of simulations/harvesting events
+sims = 100 # number of simulations/harvesting events
 
 # Set the frequency of harvesting events - here, we're harvesting once per year
 # harvesting once per year might be more reflective of pelagic trawling,
@@ -143,7 +143,7 @@ sims = 10 # number of simulations/harvesting events
 # where fishing is frequent but at a lower rate
 tstop_harvesting = Int(60*60*24*364.25)
 
-# Set the frequency to collect biomass data 
+# Set the frequency to collect biomass data
 tkeep_harvesting = Int(60*60*24) # again, save data every day
 
 # the Loop
@@ -190,7 +190,7 @@ for i in 1:sims
     push!(community_data, [i, total_biomass(s1, last = 7), species_persistence(s1, last = 7), species_richness(s1, last = 7)])
 
     #=
-    Step 6f: Update the species level dataframe
+    Step 7f: Update the species level dataframe
     =#
 
     # first identify any newly extinct species (this year) in response to harvesting

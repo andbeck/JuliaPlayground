@@ -3,7 +3,7 @@ Harvesting tutorial
 This script shows how to
 - initialize the BEFWm with a food web and your choice of parameters
 - run a burn-in to remove structurally doomed species (to avoid detecting them as false secondary extinctions) and achieve equilibrium dynamics
-- target a species or a group of species for harvesting at a given rate (e.g. 20% removal of biomass)
+- target a species or a group of species for harvesting at a given rate (e.g. 40% removal of biomass)
 - run the model
 - detect effects of harvesting (changes in species and/or community)
 =#
@@ -23,7 +23,7 @@ seed!(5436) # setting a seed makes it possible to replicate exactly the same res
 
 #=
 Step 1: Import some functions that we've made earlier
-These functions allow you to use the temperature scaled version of the BEFW which resolved in real time
+These functions allow you to use the temperature scaled version of the BEFW which is resolved in real time
 =#
 include("masters tutorials/utils harvesting.jl") # use include to add these pre-made functions
 
@@ -42,11 +42,11 @@ Step 3: Set the model parameters
 Here we are running a very basic simulation, with:
 - h (hill exponent) = 2
 - Z = (consumer-resource size ratio) = 10.0
-# As we are using the temperature scaled version of the BEFW, there are two notable differences
+# As we are using the temperature scaled version of the BEFW, there are two notable differences:
 - we have to provide a temperature (T) in Kelvin (0C = 273.15K), i.e., 20c = 20+273.15
 - we have to scale the biological rates (growth, metabolism and feeding rates as well as carrying capacity) by T
     using a pre-made function called ScaleRates!
-- this means that biomass is now in grams per meter squared
+- this means that biomass is now in grams per meter squared (g/m2)
 - and that the model now runs in real time, where 1 timestep = 1 seconds, therefore we have to
     fix a stopping point that is biologically meaningful (e.g., 50 years) and
     include an interval at which we want to save the data
@@ -93,9 +93,9 @@ species_data[p[:extinctions], :] # view the dataframe for species that went exti
 species_data.biomass0 = population_biomass(s, last = 7) #average population biomass over the last year
 
 # here we construct a dataframe for community level metrics by preallocating the type and name of each column
-df = DataFrame([Int64, Float64, Float64, Float64],[:harvesting_event, :total_biomass, :persistence, :richness])
-# populate df using push!
-push!(df, [0, total_biomass(s, last = 500), species_persistence(s, last = 500), species_richness(s, last = 500)])
+community_data = DataFrame([Int64, Float64, Float64, Float64],[:harvesting_event, :total_biomass, :persistence, :richness])
+# populate community_data using push!
+push!(community_data, [0, total_biomass(s, last = 500), species_persistence(s, last = 500), species_richness(s, last = 500)])
 # again, we've used 0 to indicate the burn in phase
 # we could also have calculated stability or diversity, or some other out of the box metrics like network height (max TL)
 # or size structure (the realised Z value of the community)
@@ -140,10 +140,10 @@ sims = 10 # number of simulations/harvesting events
 # harvesting once per year might be more reflective of pelagic trawling,
 # where fishing is infrequent but at very high rates
 # harvesting 1/month might be more reflective of bottom trawling,
-# where fishing is frequenty but at a lower rate
+# where fishing is frequent but at a lower rate
 tstop_harvesting = Int(60*60*24*364.25)
 
-# Set the frequency to collect biomass data in the computer
+# Set the frequency to collect biomass data 
 tkeep_harvesting = Int(60*60*24) # again, save data every day
 
 # the Loop
@@ -187,7 +187,7 @@ for i in 1:sims
     =#
     # using push!
     # average metrics over the last week of the year (7 days)
-    push!(df, [i, total_biomass(s1, last = 7), species_persistence(s1, last = 7), species_richness(s1, last = 7)])
+    push!(community_data, [i, total_biomass(s1, last = 7), species_persistence(s1, last = 7), species_richness(s1, last = 7)])
 
     #=
     Step 6f: Update the species level dataframe
@@ -240,19 +240,18 @@ ext_time_ts = [i[1] for i in ext_time[sort_extinct]]
 #pass extinction times to the species_data dataframe
 species_data[is_extinct_1,:"extinction_time"] .= ext_time_ts
 
-
 #=
 Step 9 - Make some pictures
 =#
 
-df
+community_data
 species_data
 
 #  biomass and species richness versus harvest event (n = 10 events)
-p1=plot(df[!,"harvesting_event"], df[!,"total_biomass"], legend = false)
+p1=plot(community_data[!,"harvesting_event"], community_data[!,"total_biomass"], legend = false)
     xlabel!("Harvest Event")
     ylabel!("Total Biomass")
-p2=plot(df[!,"harvesting_event"], df[!,"richness"], legend = false)
+p2=plot(community_data[!,"harvesting_event"], community_data[!,"richness"], legend = false)
     xlabel!("Harvest Event")
     ylabel!("Species Richness")
 plot(p1, p2, layout=(1,2))

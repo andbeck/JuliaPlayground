@@ -51,7 +51,7 @@ We've also provided the code to save some information about each species
 =#
 b0 = rand(S) # set some initial biomasses at random
 s = simulate(p, b0, stop = 2000) # simulate
-plot(s[:B], legend = false) # plot
+#plot(s[:B], legend = false) # plot
 
 #=
 Step 3a
@@ -102,7 +102,8 @@ community_data = DataFrame([Int64, Float64, Float64, Float64, Float64],[:sim, :t
 # we could also have calculated stability or diversity, or some other out of the box metrics
 
 # like network height (max TL) or size structure (the realised Z value of the community)
-push!(community_data, [0, total_biomass(s, last = 500), species_persistence(s, last = 500), species_richness(s, last = 500), species_richness(s, last = 500)/S])
+push!(community_data, [0, total_biomass(s, last = 500), species_persistence(s, last = 500), species_richness(s, last = 500), 
+    species_richness(s, last = 500)/S])
 
 #=
 Step 4: Save the biomass of each species at equilibrium
@@ -127,7 +128,7 @@ Step 5a:
 =#
 
 global i = species_richness(s, last = 500) #we need the global macro to be able to use that variable in the while loop
-global j = 0.0
+global j = 1.0
 
 #=
 Step 5b: the while loop
@@ -136,7 +137,6 @@ As long as species richness i is greater than S/2 (R50%), keep going
 =#
 
 while i >= S/2
-
     println("i = $i and j = $j") # keep track of loop
 
     #=
@@ -196,7 +196,6 @@ while i >= S/2
     =#
     global i = minimum(community_data.richness)
     global j = j + 1.0
-
 end
 
 # Following our loop, for all extinct species, we can specify the time step at which they went extinct
@@ -224,13 +223,14 @@ idnonextinct = findall(isnan.(species_data.extinction_time))
 species_data.extinction_type = fill("NaN", S)
 species_data.extinction_type[idprimary] .= "Primary"
 species_data.extinction_type[idsecondary] .= "Secondary"
+
 # look at the distribution of extinction times
 p1 = histogram(species_data[!,"extinction_time"], legend = false)
 xlabel!("Extinction Times")
 
 # mass versus extinction time
 #extinctions_time is NaN for non extinct species, so they won't be plotted, we don't need to worry about them
-p2 = plot(log10.(species_data[!, "M"]), log10.(species_data[!, "extinction_time"]),
+p2 = plot(log10.(species_data[!, "M"]), species_data[!, "extinction_time"],
     seriestype = :scatter, legend = false, c = :black, msw = 0)
     xlabel!("log10(Mass)")
     ylabel!("log10(Extinction Time")
@@ -242,7 +242,7 @@ p3 = density(species_data.indegree, group = species_data.extinction_type
 xlabel!("In-degree")
 
 # look at richess declining with events
-p4 = plot(community_data[!,"sim"], community_data[!,"richness"], legend = false)
+p4 = plot(community_data[!,"sim"], community_data[!,"richness"], marker = true, legend = false)
 xlabel!("Primary Extinction Event")
 ylabel!("Richness")
 

@@ -21,7 +21,7 @@ Pkg.status()
 import Random.seed!
 seed!(5436) # setting a seed makes it possible to replicate exactly the same results, even when there is randomness involved
 
-#
+#=
 Step 1: Import some functions that we've made earlier
 These functions allow you to use the temperature scaled version of the BEFW which is resolved in real time
 =#

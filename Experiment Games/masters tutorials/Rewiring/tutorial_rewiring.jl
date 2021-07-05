@@ -11,7 +11,7 @@ date: April 25th, 2021
 #add BioEnergeticFoodWebs#dev-2.0.0
 using BioEnergeticFoodWebs
 using EcologicalNetworks
-include("utils.jl") 
+include("Rewiring/utils.jl") 
 import Random.seed!
 seed!(22)
 
@@ -32,8 +32,9 @@ S = 30
 #C = 0.25 
 A, adbm_p = ADBM_foodweb(S)
 #You can check the food web with webplot
-pltA = webplot(A, true) #true means that we want to have consumers plotted as rows(i) and resources as columns (j)
+pltA = webplot(A, false) #true means that we want to have consumers plotted as rows(i) and resources as columns (j)
 #the resulting plot shows the interaction matrix A[i,j] = 1 is represented by a black dot and 
+
 #means that i eats j. Dots on the diagonal indicate canibalism (i eats i).
 
 # Generate the sets of parameters for the BEFWM
@@ -75,10 +76,10 @@ plt_dyn_none = plot(s_none[:B], leg = false, c = :black, ylims = (0,8), xlabel =
 plt_dyn_do = plot(s_do[:B], leg = false, c = :black, ylims = (0,8),xlabel = "time", ylabel = "biomass")
 plt_dyn_ds = plot(s_ds[:B], leg = false, c = :black, ylims = (0,8),xlabel = "time", ylabel = "biomass")
 plt_dyn_adbm = plot(s_adbm[:B], leg = false, c = :black, ylims = (0,8),xlabel = "time", ylabel = "biomass")
-plt_mat_none = webplot(p_none[:A], true)
-plt_mat_do = webplot(p_do[:A], true)
-plt_mat_ds = webplot(p_ds[:A], true)
-plt_mat_adbm = webplot(p_adbm[:A], true)
+plt_mat_none = webplot(p_none[:A], false)
+plt_mat_do = webplot(p_do[:A], false)
+plt_mat_ds = webplot(p_ds[:A], false)
+plt_mat_adbm = webplot(p_adbm[:A],false)
 
 plt = [plt_dyn_none, plt_dyn_do, plt_dyn_ds, plt_dyn_adbm
      , plt_mat_none, plt_mat_do, plt_mat_ds, plt_mat_adbm]

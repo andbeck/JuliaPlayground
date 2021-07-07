@@ -88,6 +88,26 @@ function updateA(out)
 end
 
 """
+Original ScaleRates function for real timing
+"""
+function ScaleRates!(par, k0; prod_metab = false)
+    T = par[:T]
+    M = par[:bodymass]
+    ri = ScaleGrowth(M, T)
+    r = ri .* par[:is_producer]
+    xi = ScaleMetabolism(M, T)
+    x = prod_metab ? xi : xi .* .!par[:is_producer]
+    ar = ScaleAttack(M, T)
+    ht = ScaleHandling(M, T)
+    K = carrying(M, k0, T)
+    par[:r] = r
+    par[:x] = x
+    par[:ar] = ar
+    par[:ht] = ht
+    par[:K] = K
+end
+
+"""
 Growth rate with Bolzman Arrhenius 
 """
 function ScaleGrowth(M, T)

@@ -1,5 +1,4 @@
-using Distributions: isapprox
-
+using Distributions: isapprox, minimum
 #=
 How to use the rewirinh methods in BioEnergeticFoodWebs
 author: Eva Delmas
@@ -15,7 +14,7 @@ using BioEnergeticFoodWebs
 using Distributions, DataFrames, StatsPlots
 include("extinctions/utils.jl") 
 import Random.seed!
-seed!(6656)
+seed!(87)
 
 # Generate a food web
 #=
@@ -35,25 +34,35 @@ S = 30
 
 niche_res = []
 adbm_res = []
-nrep = 1
+nrep = 10
 
 for i in 1:nrep
-     
      println("$i / $nrep")
-     A, adbm_p = ADBM_foodweb(S)
-     Z = mean(Array(adbm_p.M ./ adbm_p.M') .* A) #predator prey mass ratio
-     co = sum(A) / S^2
-     np = sum(sum(A, dims = 2) .== 0)
+
+     An = nichemodel(S, rand(Uniform(0.05, 0.45))) 
+     co_n = sum(An) / S^2
+     np_n = sum(sum(An, dims = 2) .== 0)
+     tln = trophic_rank(An)
+     Hn = maximum(tln)
      diff_co = true
      diff_np = true
      diff_height = true
-     while diff_co | diff_np
-          An = nichemodel(S, rand(Uniform(0.05, 0.45))) 
-          co_n = sum(An) / S^2
-          np_n = sum(sum(An, dims = 2) .== 0)
+
+     while diff_co | diff_np | diff_height 
+          A, adbm_p = ADBM_foodweb(S)
+          co = sum(A) / S^2
+          np = sum(sum(A, dims = 2) .== 0)
+          tl = trophic_rank(A)
+          H = maximum(tl)
           diff_co = !isapprox(co, co_n, atol = 0.05)
           diff_np = np != np_n
+          diff_height = Hn != H
      end
+     #scale bodymass
+     ap_d = Dict([x => getindex(adbm_p, x) for x in keys(adbm_p)])
+     ap_d[:M] = ap_d[:M] ./ minimum(ap_d[:M]) #activation energy for handling time
+     adbm_p = NamedTuple{Tuple(keys(ap_d))}(values(ap_d))
+     Z = mean(Array(adbm_p.M ./ adbm_p.M') .* A) #predator prey mass ratio
      Mn = Z .^ (trophic_rank(An) .- 1) #use same ppmr than adbm to have a similar size structure
 
      #You can check the food web with webplot
@@ -84,19 +93,19 @@ for i in 1:nrep
      #ADBM stands for Allometric Diet Breadth Model, from Petchey's paper
      p_adbm = model_parameters_modif(A, adbm_p, :ADBM, Δtadbm)
 
-     pn_none = model_parameters(An, bodymass = Mn, h = 2.0, T = 273.15
+     pn_none = model_parameters(An, bodymass = Mn, h = 2.0, T = 293.15
           , functional_response = :classical, scale_bodymass = false)
      ScaleRates!(pn_none, adbm_p)
      #DO stands for diet overlap, that's from Staniczencko's paper
-     pn_do = model_parameters(An, bodymass = Mn, h = 2.0, T = 273.15
+     pn_do = model_parameters(An, bodymass = Mn, h = 2.0, T = 293.15
           , functional_response = :classical, scale_bodymass = false, rewire_method = :DO)
      ScaleRates!(pn_do, adbm_p)
      #DS stands for diet similarity, from Gilljam's paper 
-     pn_ds = model_parameters(An, bodymass = Mn, h = 2.0, T = 273.15
+     pn_ds = model_parameters(An, bodymass = Mn, h = 2.0, T = 293.15
           , functional_response = :classical, scale_bodymass = false, rewire_method = :DS)
      ScaleRates!(pn_ds, adbm_p)
      #ADBM stands for Allometric Diet Breadth Model, from Petchey's paper
-     pn_adbm =  model_parameters(An, bodymass = Mn, h = 2.0, T = 273.15
+     pn_adbm =  model_parameters(An, bodymass = Mn, h = 2.0, T = 293.15
           , functional_response = :classical, scale_bodymass = false
           , rewire_method = :ADBM, adbm_trigger = :interval, adbm_interval = Δtadbm)
      ScaleRates!(pn_adbm, adbm_p)
@@ -129,14 +138,18 @@ for i in 1:nrep
 
      #no rewiring
      sn_none = simulate(pn_none, Bmn_afterburnin, stop = tstop, interval_tkeep = Δt, extinction_threshold = ϵ)
-     #diet overlap
-     sn_do = simulate(pn_do, Bmn_afterburnin, stop = tstop, interval_tkeep = Δt, extinction_threshold = ϵ)
-     #diet similarity 
-     sn_ds = simulate(pn_ds, Bmn_afterburnin, stop = tstop, interval_tkeep = Δt, extinction_threshold = ϵ)
-     #ADBM
-     sn_adbm = simulate(pn_adbm, Bmn_afterburnin, stop = tstop, interval_tkeep = Δt, extinction_threshold = ϵ)
+     if sn_none[:t][end] != tstop
+          continue
+     else
+          #diet overlap
+          sn_do = simulate(pn_do, Bmn_afterburnin, stop = tstop, interval_tkeep = Δt, extinction_threshold = ϵ)
+          #diet similarity 
+          sn_ds = simulate(pn_ds, Bmn_afterburnin, stop = tstop, interval_tkeep = Δt, extinction_threshold = ϵ)
+          #ADBM
+          sn_adbm = simulate(pn_adbm, Bmn_afterburnin, stop = tstop, interval_tkeep = Δt, extinction_threshold = ϵ)
 
-     push!(niche_res, [sn_none, sn_do, sn_ds, sn_adbm])
+          push!(niche_res, [sn_none, sn_do, sn_ds, sn_adbm])
+     end
 
      # Visualize the results
      #plt_dyn_none = plot(s_none[:B], leg = false, c = :black, ylims = (0,8), xlabel = "time", ylabel = "biomass")

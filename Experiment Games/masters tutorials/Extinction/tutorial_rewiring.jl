@@ -11,8 +11,8 @@ date: April 25th, 2021
 #so start my removing the package with rm and reinstalling with 
 #add BioEnergeticFoodWebs#dev-2.0.0
 using BioEnergeticFoodWebs
-using Distributions, DataFrames, StatsPlots
-include("extinctions/utils.jl") 
+using Distributions, DataFrames, StatsPlots, EcologicalNetworks
+include("Extinction/utils.jl") 
 import Random.seed!
 seed!(87)
 
@@ -34,7 +34,7 @@ S = 30
 
 niche_res = []
 adbm_res = []
-nrep = 10
+nrep = 1
 
 for i in 1:nrep
      println("$i / $nrep")

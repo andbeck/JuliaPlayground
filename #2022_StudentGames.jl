@@ -18,13 +18,15 @@ Random.seed!(12345)
 # make networks
 
 S=[20,50,100]
+reps = 5
+
 
 begin
 	# list to store networks
 	global networks = []
-	# monitoring variable 
-	global l = length(networks)
-    for i in enumerate(S)
+    for i in length(S)
+        # monitoring variable 
+	    global l = length(networks)
         # while loop
         while l < reps
             # generate network
@@ -42,7 +44,12 @@ begin
                 # save network is co = 0.15
             end
             global l = length(networks)
+            println(l)
         end
     end
 end
+
+length(networks)
+
+networks[1]
 # simulate

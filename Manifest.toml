@@ -1,6 +1,6 @@
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.7.2"
+julia_version = "1.7.3"
 manifest_format = "2.0"
 
 [[deps.Adapt]]
@@ -44,7 +44,9 @@ uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 
 [[deps.BioEnergeticFoodWebs]]
 deps = ["DiffEqCallbacks", "Distributions", "JLD2", "JSON", "LinearAlgebra", "OrdinaryDiffEq", "Random", "Statistics", "StatsBase", "Test"]
-git-tree-sha1 = "7b944ec7449466c7177d1293a623600cd68687cf"
+git-tree-sha1 = "2e76ea45606844be2f2e57dd3c4d09ddb4c42ac1"
+repo-rev = "dev-2.0.0"
+repo-url = "https://github.com/PoisotLab/BioEnergeticFoodWebs.jl.git"
 uuid = "9b49b652-2545-5b88-a3af-87b516beb26f"
 version = "1.2.0"
 
@@ -257,7 +259,7 @@ uuid = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 version = "0.8.6"
 
 [[deps.Downloads]]
-deps = ["ArgTools", "LibCURL", "NetworkOptions"]
+deps = ["ArgTools", "FileWatching", "LibCURL", "NetworkOptions"]
 uuid = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
 
 [[deps.EarCut_jll]]
@@ -318,6 +320,9 @@ deps = ["Compat", "Dates", "Mmap", "Printf", "Test", "UUIDs"]
 git-tree-sha1 = "129b104185df66e408edd6625d480b7f9e9823a0"
 uuid = "48062228-2e41-5def-b9a4-89aafe57970f"
 version = "0.9.18"
+
+[[deps.FileWatching]]
+uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
 
 [[deps.FillArrays]]
 deps = ["LinearAlgebra", "Random", "SparseArrays"]

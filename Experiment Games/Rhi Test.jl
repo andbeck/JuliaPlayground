@@ -1,9 +1,17 @@
 # Rhi Test
 # https://poisotlab.github.io/BioEnergeticFoodWebs.jl/latest/man/temperature/#Temperature-dependence-for-body-sizes-1
 
-using BioEnergeticFoodWebs 
+import Pkg
+
+Pkg.activate(".")
+
+using StatsBase
+using BioEnergeticFoodWebs, EcologicalNetworksPlots
 using Plots
 using Random
+
+## Utilities for Scaling and Temperature ##
+include("common_utils.jl")
 
 A = [0 1 1 ; 0 0 1 ; 0 0 0] #omnivory motif
 T_use = 290.0
@@ -14,12 +22,21 @@ p_aqua = model_parameters(A, T = T_use, Z = Z_use, TSR_type = :mean_aquatic)
 p_terr = model_parameters(A, T = T_use, Z = Z_use, TSR_type = :mean_terrestrial)
 p_max = model_parameters(A, T = T_use, Z = Z_use, TSR_type = :maximum)
 
-Random.seed!(123)
+
+ScaleRates!(p_basic, 1.0)
+ScaleRates!(p_aqua, 1.0)
+ScaleRates!(p_terr, 1.0)
+ScaleRates!(p_max, 1.0)
+
+
+#Set the random seed 
+Random.seed!(21)
+
 b0 = rand(3)
-#b0 = [26.3, 15.2, 4.3]
+b0 = [26.3, 15.2, 4.3]
 #b0 = [1.8, 0.7, 0.2]
 
-out_basic = simulate(p_basic, b0)
+out_basic = simulate(p_basic,b0)
 out_TSR_aq = simulate(p_aqua, b0)
 out_TSR_terr = simulate(p_terr, b0)
 out_TSR_max = simulate(p_max, b0)
